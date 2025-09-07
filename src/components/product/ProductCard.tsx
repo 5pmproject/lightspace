@@ -1,6 +1,6 @@
 /* ==================== 개선된 ProductCard.tsx 시작 ==================== */
 import React, { memo, useState } from 'react';
-import { Heart, Star, Plus, ShoppingCart } from 'lucide-react';
+import { Heart, Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../../types';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { DSButton } from '../ui/ds-button';
@@ -153,14 +153,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           />
         </DSButton>
 
-        {/* Quick Add to Cart Button */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Quick Add to Cart Button - moved to top-right */}
+        <div className="absolute top-2 right-10 z-10">
           <DSButton
             variant="default"
             size="icon"
             onClick={handleAddToCart}
             disabled={isAddingToCart || product.stock === 0}
-            aria-label={`Quick add ${product.name} to cart`}
+            aria-label={`Add ${product.name} to cart`}
             className={`bg-green-800 text-white hover:bg-green-700 shadow-lg transform hover:scale-110 transition-all duration-200 ${
               isAddingToCart || product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
             }`}
@@ -170,7 +170,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             ) : product.stock === 0 ? (
               <span className="text-xs">✕</span>
             ) : (
-              <Plus className="w-4 h-4" aria-hidden="true" />
+              <ShoppingCart className="w-4 h-4" aria-hidden="true" />
             )}
           </DSButton>
         </div>
