@@ -89,22 +89,46 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
         />
         
-        {/* Badges */}
+        {/* Gradient Badges */}
         <div className="absolute top-2 left-2 flex flex-col space-y-1">
           {product.isNew && (
-            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+            <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
               NEW
             </span>
           )}
           {product.isBestseller && (
-            <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+            <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
               HOT
             </span>
           )}
           {product.discount && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
               -{product.discount}%
             </span>
+          )}
+          {product.isPremium && (
+            <span className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
+              PREMIUM
+            </span>
+          )}
+          {product.isSmart && (
+            <span className="bg-gradient-to-r from-green-500 to-teal-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
+              SMART
+            </span>
+          )}
+        </div>
+
+        {/* Stock Status Indicator */}
+        <div className="absolute top-2 right-12">
+          {product.stock <= 5 && product.stock > 0 && (
+            <div className="bg-yellow-500/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
+              Only {product.stock} left
+            </div>
+          )}
+          {product.stock === 0 && (
+            <div className="bg-red-500/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
+              Out of Stock
+            </div>
           )}
         </div>
 
@@ -135,14 +159,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             variant="default"
             size="icon"
             onClick={handleAddToCart}
-            disabled={isAddingToCart}
+            disabled={isAddingToCart || product.stock === 0}
             aria-label={`Quick add ${product.name} to cart`}
-            className={`bg-green-800 text-white hover:bg-green-700 shadow-lg ${
-              isAddingToCart ? 'opacity-50 cursor-not-allowed' : ''
+            className={`bg-green-800 text-white hover:bg-green-700 shadow-lg transform hover:scale-110 transition-all duration-200 ${
+              isAddingToCart || product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             {isAddingToCart ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+            ) : product.stock === 0 ? (
+              <span className="text-xs">✕</span>
             ) : (
               <Plus className="w-4 h-4" aria-hidden="true" />
             )}
@@ -187,10 +213,21 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Category */}
-        <span className="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-          {product.category}
-        </span>
+        {/* Category and Stock Status */}
+        <div className="flex items-center justify-between">
+          <span className="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            {product.category}
+          </span>
+          {product.stock > 0 ? (
+            <span className="text-xs text-green-600 font-medium">
+              {product.stock > 10 ? 'In Stock' : `${product.stock} left`}
+            </span>
+          ) : (
+            <span className="text-xs text-red-500 font-medium">
+              Out of Stock
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );
