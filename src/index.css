@@ -5701,3 +5701,12 @@ html {
     opacity: 0;
   }
 }
+/* 기존 CSS 내용은 그대로 두고... */
+
+/* ==================== 추가 CSS 개선사항 시작 ==================== */
+/* 스크롤바 숨김 - 카테고리 필터에서 사용 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/* ... 나머지 CSS 내용 */

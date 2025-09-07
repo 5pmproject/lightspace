@@ -7,19 +7,19 @@ import { useWishlist } from './hooks/useWishlist';
 import { useNotification } from './hooks/useNotification';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Notification } from './components/common/Notification';
-import { ImageUploadModal } from './components/common/ImageUploadModal';
 import { HomeScreen } from './components/screens/HomeScreen';
 import { ProductScreen } from './components/screens/ProductScreen';
 import { CartScreen } from './components/screens/CartScreen';
+import { OrderCompleteScreen } from './components/screens/OrderCompleteScreen';
 
 const App = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
 
-  const { cart, addToCart, removeFromCart, cartItemCount, cartTotal } = useCart();
+  const { cart, addToCart, removeFromCart, cartItemCount, cartTotal, clearCart } = useCart();
   const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
   const { showNotification, notificationMessage, showNotificationMessage } = useNotification();
 
@@ -45,15 +45,67 @@ const App = () => {
     setCurrentScreen('product');
   }, []);
 
-  const handleImageUploadComplete = useCallback(() => {
-    showNotificationMessage('Found 5 similar products!');
+  // 주문 완료 관련 핸들러들
+  const handleCheckout = useCallback(() => {
+    // 랜덤 주문 번호 생성
+    const orderNumber = `LS${Date.now().toString().slice(-8)}`;
+    
+    // 예상 배송일 계산 (현재 날짜 + 5-7일)
+    const deliveryDays = Math.floor(Math.random() * 3) + 5; // 5-7일
+    const estimatedDelivery = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000);
+    
+    const newOrder = {
+      orderNumber,
+      orderItems: [...cart],
+      orderTotal: cartTotal,
+      customerInfo: {
+        name: 'John Doe',
+        email: 'john.doe@example.com', 
+        phone: '+1 (555) 123-4567',
+        address: {
+          street: '123 Main Street, Apt 4B',
+          city: 'New York',
+          state: 'NY',
+          zipCode: '10001'
+        }
+      },
+      estimatedDelivery: estimatedDelivery.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        weekday: 'long'
+      }),
+      orderDate: new Date().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric'
+      })
+    };
+    
+    setOrderData(newOrder);
+    setCurrentScreen('order-complete');
+    clearCart(); // 장바구니 비우기
+    showNotificationMessage('🎉 주문이 완료되었습니다!');
+  }, [cart, cartTotal, clearCart, showNotificationMessage]);
+
+  const handleTrackOrder = useCallback(() => {
+    showNotificationMessage('📦 주문 추적 페이지로 이동합니다');
+    // 실제로는 주문 추적 페이지로 이동하거나 모달을 띄울 수 있습니다
+  }, [showNotificationMessage]);
+
+  const handleDownloadReceipt = useCallback(() => {
+    showNotificationMessage('📄 영수증을 다운로드했습니다');
+    // 실제로는 PDF 다운로드 기능을 구현할 수 있습니다
   }, [showNotificationMessage]);
 
   // Memoized screen navigation handlers
   const handleCartClick = useCallback(() => setCurrentScreen('cart'), []);
-  const handleBackToHome = useCallback(() => setCurrentScreen('home'), []);
-  const handleShowImageUpload = useCallback(() => setShowImageUpload(true), []);
-  const handleCloseImageUpload = useCallback(() => setShowImageUpload(false), []);
+  
+  const handleBackToHome = useCallback(() => {
+    setCurrentScreen('home');
+    setSelectedProduct(null);
+    setOrderData(null);
+  }, []);
 
   // Memoized filtered products to prevent unnecessary recalculations
   const filteredProducts = useMemo(() => {
@@ -77,7 +129,6 @@ const App = () => {
       cartItemCount={cartItemCount}
       onProductClick={handleProductClick}
       onCartClick={handleCartClick}
-      onCameraClick={handleShowImageUpload}
       onAddToCart={handleAddToCart}
       onToggleWishlist={handleToggleWishlist}
       isInWishlist={isInWishlist}
@@ -89,7 +140,6 @@ const App = () => {
     cartItemCount,
     handleProductClick,
     handleCartClick,
-    handleShowImageUpload,
     handleAddToCart,
     handleToggleWishlist,
     isInWishlist
@@ -128,6 +178,7 @@ const App = () => {
       onBack={handleBackToHome}
       onAddToCart={handleAddToCart}
       onRemoveFromCart={removeFromCart}
+      onCheckout={handleCheckout}
     />
   ), [
     cart,
@@ -135,8 +186,25 @@ const App = () => {
     cartTotal,
     handleBackToHome,
     handleAddToCart,
-    removeFromCart
+    removeFromCart,
+    handleCheckout
   ]);
+
+  const orderCompleteScreen = useMemo(() => 
+    orderData ? (
+      <OrderCompleteScreen
+        orderNumber={orderData.orderNumber}
+        orderItems={orderData.orderItems}
+        orderTotal={orderData.orderTotal}
+        customerInfo={orderData.customerInfo}
+        estimatedDelivery={orderData.estimatedDelivery}
+        onBackToHome={handleBackToHome}
+        onTrackOrder={handleTrackOrder}
+        onDownloadReceipt={handleDownloadReceipt}
+      />
+    ) : null,
+    [orderData, handleBackToHome, handleTrackOrder, handleDownloadReceipt]
+  );
 
   return (
     <ErrorBoundary>
@@ -146,15 +214,11 @@ const App = () => {
         aria-label="LightSpace Shopping App"
       >
         <Notification show={showNotification} message={notificationMessage} />
-        <ImageUploadModal 
-          show={showImageUpload}
-          onClose={handleCloseImageUpload}
-          onUploadComplete={handleImageUploadComplete}
-        />
         
         {currentScreen === 'home' && homeScreen}
         {currentScreen === 'product' && productScreen}
         {currentScreen === 'cart' && cartScreen}
+        {currentScreen === 'order-complete' && orderCompleteScreen}
       </main>
     </ErrorBoundary>
   );

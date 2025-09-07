@@ -382,3 +382,5 @@ html {
     font-size: clamp(17px, 1vw, 19px);
   }
 }
+/* 제품 카드 스타일 import */
+@import './product-card.css';

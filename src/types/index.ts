@@ -30,4 +30,4 @@ export interface Category {
   gradient: string;
 }
 
-export type Screen = 'home' | 'product' | 'cart';
+export type Screen = 'home' | 'product' | 'cart' | 'order-complete';

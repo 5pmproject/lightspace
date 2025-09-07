@@ -1,0 +1,204 @@
+/* 제품 카드 전용 스타일 */
+
+/* 텍스트 말줄임 유틸리티 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 이미지 로딩 스켈레톤 애니메이션 */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 카드 호버 시 부드러운 변형 */
+.card-hover-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 배지 그림자 효과 */
+.badge-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 부드러운 색상 전환 */
+.smooth-color-transition {
+  transition: color 0.2s ease-in-out;
+}
+
+/* 버튼 클릭 애니메이션 */
+.button-press {
+  transition: transform 0.1s ease-in-out;
+}
+
+.button-press:active {
+  transform: scale(0.95);
+}
+
+/* 위시리스트 하트 애니메이션 */
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.heart-animation {
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+/* 재고 부족 경고 스타일 */
+.low-stock-warning {
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+/* 품절 오버레이 */
+.sold-out-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+/* 반응형 카드 그리드 */
+.product-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* 스크린 리더 전용 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 다크모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .product-card-dark {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .product-card-dark .product-title {
+    color: #f9fafb;
+  }
+  
+  .product-card-dark .product-price {
+    color: #10b981;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .product-card {
+    border: 2px solid #000;
+  }
+  
+  .product-card:focus {
+    outline: 4px solid #0066cc;
+  }
+}
+
+/* 모션 감소 설정 */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover-effect,
+  .button-press,
+  .heart-animation {
+    transition: none;
+    animation: none;
+    transform: none;
+  }
+  
+  /* 모든 애니메이션 비활성화 */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 로딩 스피너 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* 에러 상태 스타일 */
+.error-state {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+}
+
+/* 포커스 링 개선 */
+.focus-ring-enhanced {
+  outline: none;
+}
+
+.focus-ring-enhanced:focus {
+  ring: 2px;
+  ring-color: rgba(34, 197, 94, 0.3);
+  ring-offset: 1px;
+}
+
+/* 그리드 아이템 균등 배치 */
+.product-grid-item {
+  width: 100%;
+  height: fit-content;
+}
+
+/* 호버 시 이미지 확대 효과 */
+.image-zoom-effect {
+  overflow: hidden;
+}
+
+.image-zoom-effect img {
+  transition: transform 0.5s ease;
+}
+
+.image-zoom-effect:hover img {
+  transform: scale(1.1);
+}
