@@ -11,6 +11,7 @@ import { HomeScreen } from './components/screens/HomeScreen';
 import { ProductScreen } from './components/screens/ProductScreen';
 import { CartScreen } from './components/screens/CartScreen';
 import { OrderCompleteScreen } from './components/screens/OrderCompleteScreen';
+import { CheckoutScreen } from './components/screens/CheckoutScreen';
 
 const App = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -40,12 +41,36 @@ const App = () => {
     setCurrentScreen('cart');
   }, [addToCart, showNotificationMessage]);
 
+  const handleBuyNow = useCallback((product: Product) => {
+    // Clear cart and add only this product
+    clearCart();
+    addToCart(product);
+    showNotificationMessage('Proceeding to checkout...');
+    setCurrentScreen('checkout');
+  }, [clearCart, addToCart, showNotificationMessage]);
+
   const handleProductClick = useCallback((product: Product) => {
     setSelectedProduct(product);
     setCurrentScreen('product');
   }, []);
 
-  // 주문 완료 관련 핸들러들
+  // 체크아웃 관련 핸들러들
+  const handleGoToCheckout = useCallback(() => {
+    if (cart.length === 0) {
+      showNotificationMessage('Your cart is empty');
+      return;
+    }
+    setCurrentScreen('checkout');
+  }, [cart, showNotificationMessage]);
+
+  const handleCheckoutComplete = useCallback((orderData: any) => {
+    setOrderData(orderData);
+    setCurrentScreen('order-complete');
+    clearCart(); // 장바구니 비우기
+    showNotificationMessage('🎉 주문이 완료되었습니다!');
+  }, [clearCart, showNotificationMessage]);
+
+  // 주문 완료 관련 핸들러들 (기존 방식 유지)
   const handleCheckout = useCallback(() => {
     // 랜덤 주문 번호 생성
     const orderNumber = `LS${Date.now().toString().slice(-8)}`;
@@ -153,7 +178,7 @@ const App = () => {
         onBack={handleBackToHome}
         onCartClick={handleCartClick}
         onAddToCart={handleAddToCart}
-        onBuyNow={handleAddToCartAndNavigate}
+        onBuyNow={handleBuyNow}
         onToggleWishlist={handleToggleWishlist}
         isInWishlist={isInWishlist(selectedProduct.id)}
       />
@@ -164,7 +189,7 @@ const App = () => {
       handleBackToHome,
       handleCartClick,
       handleAddToCart,
-      handleAddToCartAndNavigate,
+      handleBuyNow,
       handleToggleWishlist,
       isInWishlist
     ]
@@ -178,7 +203,8 @@ const App = () => {
       onBack={handleBackToHome}
       onAddToCart={handleAddToCart}
       onRemoveFromCart={removeFromCart}
-      onCheckout={handleCheckout}
+      onCheckout={handleGoToCheckout}
+      onQuickCheckout={handleCheckout}
     />
   ), [
     cart,
@@ -187,6 +213,7 @@ const App = () => {
     handleBackToHome,
     handleAddToCart,
     removeFromCart,
+    handleGoToCheckout,
     handleCheckout
   ]);
 
@@ -206,6 +233,14 @@ const App = () => {
     [orderData, handleBackToHome, handleTrackOrder, handleDownloadReceipt]
   );
 
+  const checkoutScreen = useMemo(() => (
+    <CheckoutScreen
+      cartItems={cart}
+      onBack={handleBackToHome}
+      onComplete={handleCheckoutComplete}
+    />
+  ), [cart, handleBackToHome, handleCheckoutComplete]);
+
   return (
     <ErrorBoundary>
       <main 
@@ -218,6 +253,7 @@ const App = () => {
         {currentScreen === 'home' && homeScreen}
         {currentScreen === 'product' && productScreen}
         {currentScreen === 'cart' && cartScreen}
+        {currentScreen === 'checkout' && checkoutScreen}
         {currentScreen === 'order-complete' && orderCompleteScreen}
       </main>
     </ErrorBoundary>

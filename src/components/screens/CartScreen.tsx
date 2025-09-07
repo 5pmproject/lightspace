@@ -9,7 +9,8 @@ interface CartScreenProps {
   onBack: () => void;
   onAddToCart: (product: CartItem) => void;
   onRemoveFromCart: (productId: number) => void;
-  onCheckout: () => void; // 새로 추가된 prop
+  onCheckout: () => void; // 새로운 체크아웃 플로우
+  onQuickCheckout?: () => void; // 기존 빠른 체크아웃 (선택적)
 }
 
 export const CartScreen: React.FC<CartScreenProps> = ({
@@ -19,7 +20,8 @@ export const CartScreen: React.FC<CartScreenProps> = ({
   onBack,
   onAddToCart,
   onRemoveFromCart,
-  onCheckout
+  onCheckout,
+  onQuickCheckout
 }) => {
   // 배송비 계산 (무료배송 조건: $100 이상)
   const freeShippingThreshold = 100;
@@ -188,15 +190,27 @@ export const CartScreen: React.FC<CartScreenProps> = ({
             </div>
           </div>
 
-          {/* Checkout Button */}
-          <button
-            onClick={onCheckout}
-            className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg"
-            aria-label={`총 ${finalTotal.toFixed(2)}달러 결제하기`}
-          >
-            <CreditCard className="w-5 h-5" />
-            <span>${finalTotal.toFixed(2)} 결제하기</span>
-          </button>
+          {/* Checkout Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={onCheckout}
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg"
+              aria-label={`총 ${finalTotal.toFixed(2)}달러 결제하기`}
+            >
+              <CreditCard className="w-5 h-5" />
+              <span>Secure Checkout ${finalTotal.toFixed(2)}</span>
+            </button>
+            
+            {onQuickCheckout && (
+              <button
+                onClick={onQuickCheckout}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                aria-label={`빠른 주문 ${finalTotal.toFixed(2)}달러`}
+              >
+                <span>Quick Order ${finalTotal.toFixed(2)}</span>
+              </button>
+            )}
+          </div>
 
           <div className="text-center">
             <p className="text-xs text-gray-500">
