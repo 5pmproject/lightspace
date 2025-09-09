@@ -1,5 +1,5 @@
 /* ==================== 개선된 ProductCard.tsx 시작 ==================== */
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import { Heart, Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../../types';
 import { OptimizedImage } from '../common/OptimizedImage';
@@ -22,6 +22,41 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
+  const [cartCtaVariant, setCartCtaVariant] = useState<'glass' | 'brand'>('glass');
+
+  // A/B: determine cart CTA variant (glass vs brand) with URL override and persistence
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const allowed = new Set(['glass', 'brand']);
+      const params = new URLSearchParams(window.location.search);
+      const override = (params.get('ctaVariant') || params.get('cta'))?.toLowerCase();
+      if (override && allowed.has(override)) {
+        setCartCtaVariant(override as 'glass' | 'brand');
+        localStorage.setItem('ab_cart_cta_variant', override);
+        return;
+      }
+      const saved = localStorage.getItem('ab_cart_cta_variant');
+      if (saved && allowed.has(saved)) {
+        setCartCtaVariant(saved as 'glass' | 'brand');
+        return;
+      }
+      const randomized = Math.random() < 0.5 ? 'glass' : 'brand';
+      setCartCtaVariant(randomized);
+      localStorage.setItem('ab_cart_cta_variant', randomized);
+    } catch {
+      // Fallback safely without breaking UI
+      setCartCtaVariant('glass');
+    }
+  }, []);
+
+  const cartButtonClasses = useMemo(() => {
+    if (cartCtaVariant === 'brand') {
+      return 'text-white bg-gradient-to-br from-[#667eea] to-[#764ba2] shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:shadow-[0_6px_16px_rgba(102,126,234,0.4)]';
+    }
+    // glass default
+    return 'text-white bg-black/70 backdrop-blur-md border-2 border-white/20 shadow-lg hover:bg-black/60';
+  }, [cartCtaVariant]);
 
   // 제품 클릭 핸들러
   const handleProductClick = () => {
@@ -162,7 +197,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             disabled={isAddingToCart || product.stock === 0}
             isLoading={isAddingToCart}
             aria-label={product.stock === 0 ? `${product.name} 품절` : `${product.name} 장바구니 담기`}
-            className={`text-white bg-black/70 backdrop-blur-md border-2 border-white/20 shadow-lg hover:bg-black/60 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+            className={`${cartButtonClasses} focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
               isAddingToCart || product.stock === 0 ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.98]'
             }`}
             leftIcon={product.stock > 0 ? <ShoppingCart className="w-4 h-4" aria-hidden="true" /> : undefined}
