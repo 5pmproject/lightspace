@@ -153,25 +153,21 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           />
         </DSButton>
 
-        {/* Quick Add to Cart Button - moved to top-right */}
-        <div className="absolute top-2 right-10 z-10">
+        {/* Cart CTA: Bottom-right text button with dark glassmorphism */}
+        <div className="absolute bottom-3 right-3 z-10">
           <DSButton
-            variant="default"
-            size="icon"
+            variant="tertiary"
+            size="md"
             onClick={handleAddToCart}
             disabled={isAddingToCart || product.stock === 0}
-            aria-label={`Add ${product.name} to cart`}
-            className={`bg-green-800 text-white hover:bg-green-700 shadow-lg transform hover:scale-110 transition-all duration-200 ${
-              isAddingToCart || product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            isLoading={isAddingToCart}
+            aria-label={product.stock === 0 ? `${product.name} 품절` : `${product.name} 장바구니 담기`}
+            className={`text-white bg-black/70 backdrop-blur-md border-2 border-white/20 shadow-lg hover:bg-black/60 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+              isAddingToCart || product.stock === 0 ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.98]'
             }`}
+            leftIcon={product.stock > 0 ? <ShoppingCart className="w-4 h-4" aria-hidden="true" /> : undefined}
           >
-            {isAddingToCart ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-            ) : product.stock === 0 ? (
-              <span className="text-xs">✕</span>
-            ) : (
-              <ShoppingCart className="w-4 h-4" aria-hidden="true" />
-            )}
+            {product.stock === 0 ? '품절' : '장바구니'}
           </DSButton>
         </div>
       </div>
