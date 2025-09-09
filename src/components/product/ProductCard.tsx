@@ -1,6 +1,6 @@
 /* ==================== 개선된 ProductCard.tsx 시작 ==================== */
-import React, { memo, useState } from 'react';
-import { Heart, Star, Plus, ShoppingCart } from 'lucide-react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Heart, Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../../types';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { DSButton } from '../ui/ds-button';
@@ -22,6 +22,44 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
+  const [cartCtaVariant, setCartCtaVariant] = useState<'glass' | 'brand'>('glass');
+
+  // A/B: determine cart CTA variant (glass vs brand) with URL override and persistence
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const allowed = new Set(['glass', 'brand']);
+      const params = new URLSearchParams(window.location.search);
+      const override = (params.get('ctaVariant') || params.get('cta'))?.toLowerCase();
+      if (override && allowed.has(override)) {
+        setCartCtaVariant(override as 'glass' | 'brand');
+        localStorage.setItem('ab_cart_cta_variant', override);
+        window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_assigned', variant: override } }));
+        return;
+      }
+      const saved = localStorage.getItem('ab_cart_cta_variant');
+      if (saved && allowed.has(saved)) {
+        setCartCtaVariant(saved as 'glass' | 'brand');
+        window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_loaded', variant: saved } }));
+        return;
+      }
+      const randomized = Math.random() < 0.5 ? 'glass' : 'brand';
+      setCartCtaVariant(randomized);
+      localStorage.setItem('ab_cart_cta_variant', randomized);
+      window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_randomized', variant: randomized } }));
+    } catch {
+      // Fallback safely without breaking UI
+      setCartCtaVariant('glass');
+    }
+  }, []);
+
+  const cartButtonClasses = useMemo(() => {
+    if (cartCtaVariant === 'brand') {
+      return 'text-white bg-gradient-to-br from-[#667eea] to-[#764ba2] shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:shadow-[0_6px_16px_rgba(102,126,234,0.4)]';
+    }
+    // glass default
+    return 'text-white bg-black/70 backdrop-blur-md border-2 border-white/20 shadow-lg hover:bg-black/60';
+  }, [cartCtaVariant]);
 
   // 제품 클릭 핸들러
   const handleProductClick = () => {
@@ -153,25 +191,32 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           />
         </DSButton>
 
-        {/* Quick Add to Cart Button */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Cart CTA: Bottom-right text button with dark glassmorphism */}
+        <div className="absolute bottom-3 right-3 z-10">
           <DSButton
-            variant="default"
-            size="icon"
-            onClick={handleAddToCart}
+            variant="tertiary"
+            size="md"
+            onClick={(e) => {
+              handleAddToCart(e);
+              try {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_click', variant: cartCtaVariant, productId: product.id, productName: product.name } }));
+                }
+              } catch {}
+            }}
             disabled={isAddingToCart || product.stock === 0}
-            aria-label={`Quick add ${product.name} to cart`}
-            className={`bg-green-800 text-white hover:bg-green-700 shadow-lg transform hover:scale-110 transition-all duration-200 ${
-              isAddingToCart || product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            isLoading={isAddingToCart}
+            aria-label={product.stock === 0 ? `${product.name} 품절` : `${product.name} 장바구니 담기`}
+            className={`${cartButtonClasses} focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+              isAddingToCart || product.stock === 0 ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.98]'
             }`}
+            leftIcon={product.stock > 0 ? <ShoppingCart className="w-4 h-4" aria-hidden="true" /> : undefined}
+            data-testid="product-card-cart-cta"
+            data-variant={cartCtaVariant}
+            data-product-id={product.id}
+            data-product-name={product.name}
           >
-            {isAddingToCart ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-            ) : product.stock === 0 ? (
-              <span className="text-xs">✕</span>
-            ) : (
-              <Plus className="w-4 h-4" aria-hidden="true" />
-            )}
+            {product.stock === 0 ? '품절' : '장바구니'}
           </DSButton>
         </div>
       </div>
