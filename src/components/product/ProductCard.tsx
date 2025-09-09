@@ -34,16 +34,19 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       if (override && allowed.has(override)) {
         setCartCtaVariant(override as 'glass' | 'brand');
         localStorage.setItem('ab_cart_cta_variant', override);
+        window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_assigned', variant: override } }));
         return;
       }
       const saved = localStorage.getItem('ab_cart_cta_variant');
       if (saved && allowed.has(saved)) {
         setCartCtaVariant(saved as 'glass' | 'brand');
+        window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_loaded', variant: saved } }));
         return;
       }
       const randomized = Math.random() < 0.5 ? 'glass' : 'brand';
       setCartCtaVariant(randomized);
       localStorage.setItem('ab_cart_cta_variant', randomized);
+      window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_variant_randomized', variant: randomized } }));
     } catch {
       // Fallback safely without breaking UI
       setCartCtaVariant('glass');
@@ -193,7 +196,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           <DSButton
             variant="tertiary"
             size="md"
-            onClick={handleAddToCart}
+            onClick={(e) => {
+              handleAddToCart(e);
+              try {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('analytics', { detail: { event: 'cta_click', variant: cartCtaVariant, productId: product.id, productName: product.name } }));
+                }
+              } catch {}
+            }}
             disabled={isAddingToCart || product.stock === 0}
             isLoading={isAddingToCart}
             aria-label={product.stock === 0 ? `${product.name} 품절` : `${product.name} 장바구니 담기`}
@@ -201,6 +211,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               isAddingToCart || product.stock === 0 ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.98]'
             }`}
             leftIcon={product.stock > 0 ? <ShoppingCart className="w-4 h-4" aria-hidden="true" /> : undefined}
+            data-testid="product-card-cart-cta"
+            data-variant={cartCtaVariant}
+            data-product-id={product.id}
+            data-product-name={product.name}
           >
             {product.stock === 0 ? '품절' : '장바구니'}
           </DSButton>
